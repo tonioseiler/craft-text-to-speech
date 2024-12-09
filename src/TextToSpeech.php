@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
 use furbo\crafttexttospeech\models\Settings;
+use furbo\crafttexttospeech\services\TextToSpeechService;
 
 /**
  * Text‐to‐Speech plugin
@@ -15,24 +16,26 @@ use furbo\crafttexttospeech\models\Settings;
  * @author Furbo GmbH <support@furbo.ch>
  * @copyright Furbo GmbH
  * @license MIT
+ * @property-read TextToSpeechService $textToSpeechService
  */
 class TextToSpeech extends Plugin
 {
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSettings = true;
 
+    public static $plugin;
+
     public static function config(): array
     {
         return [
-            'components' => [
-                // Define component configs here...
-            ],
+            'components' => ['textToSpeechService' => TextToSpeechService::class],
         ];
     }
 
     public function init(): void
     {
         parent::init();
+        self::$plugin = $this;
 
         $this->attachEventHandlers();
 

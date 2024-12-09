@@ -12,7 +12,8 @@
   },
   "require": {
     "php": ">=8.2",
-    "craftcms/cms": "^5.4.0"
+    "craftcms/cms": "^5.4.0",
+    "google/cloud-text-to-speech": "^1.12.1"
   },
   "require-dev": {
     "craftcms/ecs": "dev-main",

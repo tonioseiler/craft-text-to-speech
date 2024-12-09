@@ -3,4 +3,140 @@
 
 {% import '_includes/forms.twig' as forms %}
 
-{# ... #}
+
+{{ forms.textareaField({
+    label: 'Credentials JSON',
+    id: 'credentialsJson',
+    name: 'credentialsJson',
+    value: settings.credentialsJson,
+    required: true,
+    rows: 20
+}) }}
+
+
+{% if settings.credentialsJson %}
+    <hr/>
+
+    {% set siteRows = [] %}
+    {% set voicesOptions = [] %}
+
+
+
+    {% for site in craft.app.sites.getAllSites() %}
+        {% set siteSettings = settings['voices'][site.handle] ?? null %}
+        {% set siteRows = siteRows|merge({
+            (site.handle): {
+                heading: site.name|t('site')|e,
+                language: site.language,
+                voice: {
+                    value: siteSettings ? siteSettings.voice,
+                    options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getVoices(site.language)
+                },
+                button: {
+                    value: '<button class="btn small" type="button">Test voice</button>'
+                }
+            }|filter
+        }) %}
+    {% endfor %}
+
+    {{ forms.editableTableField({
+        label: "Voices"|t('app'),
+        instructions: "Define the voice for each site"|t('app'),
+        id: 'voices',
+        name: 'voices',
+        cols: {
+            heading: {
+                type: 'heading',
+                heading: "Site"|t('app'),
+                thin: true
+            },
+            language: {
+                type: 'heading',
+                heading: "Language"|t('app'),
+                thin: true
+            },
+            voice: {
+                type: 'select',
+                heading: "Voice"|t('app'),
+            },
+            button: {
+                type: 'html',
+                heading: "Action"|t('app'),
+            }
+        }|filter,
+        rows: siteRows,
+        fullWidth: true,
+        allowAdd: false,
+        allowDelete: false,
+        allowReorder: false
+    }) }}
+
+
+    {% set sectionRows = [] %}
+
+
+
+    {% for section in craft.app.entries.getAllSections() %}
+        {% set sectionSettings = settings['sections'][section.handle] ?? null %}
+
+        {% set sectionRows = sectionRows|merge({
+            (section.handle): {
+                heading: section.name|t('site')|e,
+                template: {
+                    value: sectionSettings ? sectionSettings.template,
+                },
+            }|filter
+        }) %}
+
+    {% endfor %}
+
+
+
+    {{ forms.editableTableField({
+        label: "Url's"|t('app'),
+        instructions: "Define URLS and template to be used to show collection items."|t('app'),
+        id: 'sections',
+        name: 'sections',
+        cols: {
+            heading: {
+                type: 'heading',
+                heading: "Section"|t('app'),
+                thin: true
+            },
+            template: {
+                type: 'template',
+                heading: "Template"|t('app'),
+                info: 'Leave blank if entries don’t want TTS'|t('app'),
+                code: true
+            }
+        }|filter,
+        rows: sectionRows,
+        fullWidth: true,
+        allowAdd: false,
+        allowDelete: false,
+        allowReorder: false
+    }) }}
+
+
+    <div class="field">
+        <div class="heading"><label id="settings-attachmentVolumeId-label" for="settings-attachmentVolumeId">Save Attachments</label></div>
+        <div id="settings-attachmentVolumeId-instructions" class="instructions"><p>Where the items attachments should be saved.</p></div>
+        {{ forms.select({
+            id: 'attachmentVolumeId',
+            name: 'attachmentVolumeId',
+            options: craft.museumPlus.getVolumes(),
+            value: settings['attachmentVolumeId']})
+        }}
+
+    </div>
+
+    {{ forms.textField({
+        label: 'Folder',
+        id: 'folder',
+        name: 'folder',
+        value: settings.folder,
+        required: false
+    }) }}
+{% else %}
+    <p id="apiKeyMessage" style="color: red;">Please fill in the API Key to enable the other fields.</p>
+{% endif %}
