@@ -5,8 +5,15 @@ namespace furbo\crafttexttospeech;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
+use craft\elements\Entry;
+use craft\events\DefineBehaviorsEvent;
+use craft\events\RegisterComponentTypesEvent;
+use craft\services\Utilities;
+use furbo\crafttexttospeech\behaviors\TextToSpeechBehavior;
 use furbo\crafttexttospeech\models\Settings;
 use furbo\crafttexttospeech\services\TextToSpeechService;
+use furbo\crafttexttospeech\utilities\TextToSpeechUtility;
+use yii\base\Event;
 
 /**
  * Text‐to‐Speech plugin
@@ -63,5 +70,24 @@ class TextToSpeech extends Plugin
     {
         // Register event handlers here ...
         // (see https://craftcms.com/docs/5.x/extend/events.html to get started)
+        \yii\base\Event::on(
+            Entry::class,
+            Entry::EVENT_DEFINE_BEHAVIORS,
+            function (DefineBehaviorsEvent $event) {
+                try {
+                    $section = $event->sender->getSection();
+                    $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($section->handle);
+                    if(isset($sectionSettings['template'])) {
+                        $event->behaviors[$section->handle] = TextToSpeechBehavior::class;
+                    }
+                }catch (\Exception $e){
+                }
+            }
+        );
+
+        //TODO: After save entry, generate audio file in a job only for sections with a template
+        Event::on(Utilities::class, Utilities::EVENT_REGISTER_UTILITIES, function (RegisterComponentTypesEvent $event) {
+            $event->types[] = TextToSpeechUtility::class;
+        });
     }
 }

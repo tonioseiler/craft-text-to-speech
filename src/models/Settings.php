@@ -26,4 +26,16 @@ class Settings extends Model
         ];
     }
 
+    public function getSectionByHandle($handle)
+    {
+        return $this->sections[$handle] ?? null;
+    }
+
+    public function getSectionsWithTemplate()
+    {
+        return array_filter($this->sections, function ($section) {
+            return isset($section['template']) && $section['template'] !== '';
+        });
+    }
+
 }

@@ -1,4 +1,4 @@
-{# @var plugin \furbo\crafttexttospeech\TextToSpeech #}
+{# @var plugin \furbo\crafttexttospeech\TextToSpeechBehavior #}
 {# @var settings \furbo\crafttexttospeech\models\Settings #}
 
 {% import '_includes/forms.twig' as forms %}
@@ -19,7 +19,6 @@
 
     {% set siteRows = [] %}
     {% set voicesOptions = [] %}
-
 
 
     {% for site in craft.app.sites.getAllSites() %}
@@ -75,6 +74,7 @@
     {% set sectionRows = [] %}
 
 
+    {# New column to add the handle field if you don't want to use views #}
 
     {% for section in craft.app.entries.getAllSections() %}
         {% set sectionSettings = settings['sections'][section.handle] ?? null %}
@@ -93,8 +93,8 @@
 
 
     {{ forms.editableTableField({
-        label: "Url's"|t('app'),
-        instructions: "Define URLS and template to be used to show collection items."|t('app'),
+        label: "Sections"|t('app'),
+        instructions: "Define the templates for each section"|t('app'),
         id: 'sections',
         name: 'sections',
         cols: {

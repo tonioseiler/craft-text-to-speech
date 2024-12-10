@@ -1,0 +1,7 @@
+<form method="post">
+    {{ actionInput('text-to-speech/text-to-speech/generate-all-tts') }}
+    {{ csrfInput() }}
+    <div class="buttons">
+        <button type="submit" class="btn submit secondary">Generate TTS Audios</button>
+    </div>
+</form>
