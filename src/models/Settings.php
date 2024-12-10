@@ -18,6 +18,10 @@ class Settings extends Model
 
     public $sections = [];
 
+    public $fields = [];
+
+    public $type = "template";
+
 
     public function rules(): array
     {

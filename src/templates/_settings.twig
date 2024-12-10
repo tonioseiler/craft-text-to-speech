@@ -17,6 +17,28 @@
 {% if settings.credentialsJson %}
     <hr/>
 
+    <div class="field">
+        <div class="heading"><label id="settings-attachmentVolumeId-label" for="settings-attachmentVolumeId">Save Attachments</label></div>
+        <div id="settings-attachmentVolumeId-instructions" class="instructions"><p>Where the items attachments should be saved.</p></div>
+        {{ forms.select({
+            id: 'attachmentVolumeId',
+            name: 'attachmentVolumeId',
+            options: craft.museumPlus.getVolumes(),
+            value: settings['attachmentVolumeId']})
+        }}
+
+    </div>
+
+    {{ forms.textField({
+        label: 'Folder',
+        id: 'folder',
+        name: 'folder',
+        value: settings.folder,
+        required: false
+    }) }}
+
+    <hr/>
+
     {% set siteRows = [] %}
     {% set voicesOptions = [] %}
 
@@ -70,73 +92,114 @@
         allowReorder: false
     }) }}
 
+    <hr/>
 
-    {% set sectionRows = [] %}
+    {{ forms.select({
+        label: 'Select Option',
+        id: 'type',
+        name: 'type',
+        value: settings.type,
+        options: [
+            { label: 'Template', value: 'template' },
+            { label: 'Fields', value: 'fields' }
+        ]
+    }) }}
+
+    {% if settings.type == 'template' %}
+        {% set sectionRows = [] %}
 
 
-    {# New column to add the handle field if you don't want to use views #}
+        {# New column to add the handle field if you don't want to use views #}
 
-    {% for section in craft.app.entries.getAllSections() %}
-        {% set sectionSettings = settings['sections'][section.handle] ?? null %}
+        {% for section in craft.app.entries.getAllSections() %}
+            {% set sectionSettings = settings['sections'][section.handle] ?? null %}
 
-        {% set sectionRows = sectionRows|merge({
-            (section.handle): {
-                heading: section.name|t('site')|e,
-                template: {
-                    value: sectionSettings ? sectionSettings.template,
+            {% set sectionRows = sectionRows|merge({
+                (section.handle): {
+                    heading: section.name|t('site')|e,
+                    template: {
+                        value: sectionSettings ? sectionSettings.template,
+                    },
+                }|filter
+            }) %}
+
+        {% endfor %}
+
+
+
+        {{ forms.editableTableField({
+            label: "Sections"|t('app'),
+            instructions: "Define the templates for each section"|t('app'),
+            id: 'sections',
+            name: 'sections',
+            cols: {
+                heading: {
+                    type: 'heading',
+                    heading: "Section"|t('app'),
+                    thin: true
                 },
-            }|filter
-        }) %}
+                template: {
+                    type: 'template',
+                    heading: "Template"|t('app'),
+                    info: 'Leave blank if entries don’t want TTS'|t('app'),
+                    code: true
+                }
+            }|filter,
+            rows: sectionRows,
+            fullWidth: true,
+            allowAdd: false,
+            allowDelete: false,
+            allowReorder: false
+        }) }}
 
-    {% endfor %}
-
-
-
-    {{ forms.editableTableField({
-        label: "Sections"|t('app'),
-        instructions: "Define the templates for each section"|t('app'),
-        id: 'sections',
-        name: 'sections',
-        cols: {
-            heading: {
-                type: 'heading',
-                heading: "Section"|t('app'),
-                thin: true
-            },
-            template: {
-                type: 'template',
-                heading: "Template"|t('app'),
-                info: 'Leave blank if entries don’t want TTS'|t('app'),
-                code: true
-            }
-        }|filter,
-        rows: sectionRows,
-        fullWidth: true,
-        allowAdd: false,
-        allowDelete: false,
-        allowReorder: false
-    }) }}
+    {% endif %}
 
 
-    <div class="field">
-        <div class="heading"><label id="settings-attachmentVolumeId-label" for="settings-attachmentVolumeId">Save Attachments</label></div>
-        <div id="settings-attachmentVolumeId-instructions" class="instructions"><p>Where the items attachments should be saved.</p></div>
-        {{ forms.select({
-            id: 'attachmentVolumeId',
-            name: 'attachmentVolumeId',
-            options: craft.museumPlus.getVolumes(),
-            value: settings['attachmentVolumeId']})
-        }}
+    {% if settings.type == 'fields' %}
+        {% set fieldsRows = [] %}
 
-    </div>
+        {% for section in craft.app.entries.getAllSections() %}
+            {% set fieldsSettings = settings['fields'][section.handle] ?? null %}
 
-    {{ forms.textField({
-        label: 'Folder',
-        id: 'folder',
-        name: 'folder',
-        value: settings.folder,
-        required: false
-    }) }}
+            {% set fieldsRows = fieldsRows|merge({
+                (section.handle): {
+                    heading: section.name|t('site')|e,
+                    fields: {
+                        value: fieldsSettings ? fieldsSettings.fields,
+                    },
+                }|filter
+            }) %}
+
+        {% endfor %}
+
+
+
+        {{ forms.editableTableField({
+            label: "Fields"|t('app'),
+            instructions: "Define the fields for each section"|t('app'),
+            id: 'fields',
+            name: 'fields',
+            cols: {
+                heading: {
+                    type: 'heading',
+                    heading: "Section"|t('app'),
+                    thin: true
+                },
+                fields: {
+                    type: 'singleline',
+                    heading: "Fields"|t('app'),
+                    info: 'Leave blank if entries don’t want TTS'|t('app'),
+                    code: true
+                }
+            }|filter,
+            rows: fieldsRows,
+            fullWidth: true,
+            allowAdd: false,
+            allowDelete: false,
+            allowReorder: false
+        }) }}
+    {% endif %}
+
 {% else %}
     <p id="apiKeyMessage" style="color: red;">Please fill in the API Key to enable the other fields.</p>
 {% endif %}

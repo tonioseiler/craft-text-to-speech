@@ -5,7 +5,14 @@ namespace furbo\crafttexttospeech\services;
 use Craft;
 use craft\elements\Asset;
 use craft\elements\Entry;
+use craft\errors\AssetException;
+use craft\errors\ElementNotFoundException;
+use craft\errors\FsException;
+use craft\errors\FsObjectExistsException;
+use craft\helpers\Queue;
+use craft\models\VolumeFolder;
 use craft\web\View;
+use furbo\crafttexttospeech\jobs\GenerateTTSJob;
 use furbo\crafttexttospeech\models\Settings;
 use furbo\crafttexttospeech\TextToSpeech;
 use Google\ApiCore\ApiException;
@@ -19,6 +26,7 @@ use Google\Cloud\TextToSpeech\V1\SynthesisInput;
 use Google\Cloud\TextToSpeech\V1\SynthesizeSpeechRequest;
 use Google\Cloud\TextToSpeech\V1\VoiceSelectionParams;
 use yii\base\Component;
+use yii\base\Exception;
 
 /**
  * Text To Speech Service service
@@ -83,20 +91,37 @@ class TextToSpeechService extends Component
         return $voiceList;
     }
 
-    public function generateAudioFromTemplate(Entry $entry): ?Asset
+    public function generateAudioFromTemplate(Entry $entry): void
     {
         $template = $this->settings->getSectionByHandle($entry->section->handle)['template'];
         $content = Craft::$app->view->renderTemplate($template, ['entry' => $entry], View::TEMPLATE_MODE_SITE);
         $siteHandle = $entry->site->handle;
         $filename = $entry->section->handle . "-" . $entry->slug . "-" . $siteHandle;
-        return $this->generateAudio($content, $siteHandle, $filename);
+
+        // Call the job to generate the audio
+        $job = new GenerateTTSJob([
+            'content' => $content,
+            'siteHandle' => $siteHandle,
+            'filename' => $filename,
+        ]);
+        Queue::push($job);
+
     }
 
-    public function generateAudioFromFields(Entry $entry, array $fields): ?Asset
+    public function generateAudioFromFields(Entry $entry, array $fields): void
     {
-        return null;
+
     }
 
+    /**
+     * @throws AssetException
+     * @throws ElementNotFoundException
+     * @throws FsObjectExistsException
+     * @throws \Throwable
+     * @throws FsException
+     * @throws Exception
+     * @throws ApiException
+     */
     public function generateAudio(string $content, string $siteHandle, string $filename): ?Asset
     {
         $site = Craft::$app->sites->getSiteByHandle($siteHandle);
@@ -108,7 +133,7 @@ class TextToSpeechService extends Component
         $input = new SynthesisInput();
 
         //Check if content is SSML or plain text
-        if (strpos($content, '<speak>') !== false) {
+        if (str_contains($content, '<speak>')) {
             $input->setSsml($content);
         } else {
             $input->setText($content);
@@ -131,7 +156,16 @@ class TextToSpeechService extends Component
 
         $dataStream = $response->getAudioContent();
 
-        $asset = new Asset();
+        //Check if the filename already exists
+        $asset = Asset::find()
+            ->filename($filename . ".mp3")
+            ->volumeId($this->settings->attachmentVolumeId)
+            ->one();
+
+        if(is_null($asset)){
+            $asset = new Asset();
+        }
+
         $asset->setVolumeId($this->settings->attachmentVolumeId);
         $asset->setScenario(Asset::SCENARIO_CREATE);
         if($this->settings->folder) {
@@ -140,14 +174,22 @@ class TextToSpeechService extends Component
                 'volumeId' => $this->settings->attachmentVolumeId,
                 'name' => $this->settings->folder,
             ]);
-            if(!$folder) {
-                $folder = Craft::$app->assets->createFolder($this->settings->attachmentVolumeId, $this->settings->folder);
+
+            if(is_null($folder)){
+                // Create the folder
+                $folder = new VolumeFolder([
+                    'name' => $this->settings->folder,
+                    'volumeId' => $this->settings->attachmentVolumeId,
+                    'parentId' => $this->settings->attachmentVolumeId,
+                    'path' => $this->settings->folder . '/',
+                ]);
+                Craft::$app->assets->createFolder($folder);
             }
+
             $asset->newFolderId = $folder->id;
         }
         $asset->filename = $filename . ".mp3";
         $asset->kind = 'audio';
-        // data stream to save in the asset
         // Save the data stream to the asset's file
         $tempPath = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . $asset->filename;
         file_put_contents($tempPath, $dataStream);
@@ -160,7 +202,6 @@ class TextToSpeechService extends Component
         if(Craft::$app->elements->saveElement($asset)){
             return $asset;
         }
-
 
         return null;
     }

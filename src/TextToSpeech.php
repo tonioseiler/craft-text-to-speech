@@ -85,7 +85,21 @@ class TextToSpeech extends Plugin
             }
         );
 
-        //TODO: After save entry, generate audio file in a job only for sections with a template
+        //After save entry, generate audio file in a job only for sections with a template
+        Event::on(Entry::class, Entry::EVENT_AFTER_SAVE, function($event) {
+            $entry = $event->sender;
+            if(!$entry->section){
+                return;
+            }
+            if (!$entry->getIsDraft() && !$entry->getIsRevision()) {
+                $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($entry->section->handle);
+                if (isset($sectionSettings['template'])) {
+                    TextToSpeech::getInstance()->textToSpeechService->generateAudioFromTemplate($entry);
+                }
+            }
+        });
+
+
         Event::on(Utilities::class, Utilities::EVENT_REGISTER_UTILITIES, function (RegisterComponentTypesEvent $event) {
             $event->types[] = TextToSpeechUtility::class;
         });

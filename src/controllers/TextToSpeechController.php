@@ -30,7 +30,7 @@ class TextToSpeechController extends Controller
             $template = $section['template'];
             $entries = Entry::find()->section($handle)->all();
             foreach ($entries as $entry) {
-                $audio = TextToSpeech::$plugin->textToSpeechService->generateAudioFromTemplate($entry);
+                TextToSpeech::$plugin->textToSpeechService->generateAudioFromTemplate($entry);
             }
         }
 
