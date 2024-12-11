@@ -12,7 +12,7 @@ class TextToSpeechUtility extends Utility
 {
     public static function displayName(): string
     {
-        return Craft::t('text-to-speech', 'Text To Speech Utility');
+        return Craft::t('text-to-speech', 'Text-To-Speech');
     }
 
     static function id(): string

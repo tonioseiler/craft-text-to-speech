@@ -1,4 +1,4 @@
-# Text‐to‐Speech
+# Google Text‐to‐Speech AI for Craft CMS
 
 The Text-to-Speech Plugin is a powerful tool designed to bring enhanced accessibility and user engagement to your Craft CMS website. With this plugin, you can effortlessly convert written content into natural-sounding speech, creating an inclusive experience for users who prefer or require audio content.
 
