@@ -98,6 +98,8 @@ class TextToSpeechService extends Component
         $siteHandle = $entry->site->handle;
         $filename = $entry->section->handle . "-" . $entry->slug . "-" . $siteHandle;
 
+        //$this->generateAudio($content, $siteHandle, $filename);
+
         // Call the job to generate the audio
         $job = new GenerateTTSJob([
             'content' => $content,
@@ -105,6 +107,7 @@ class TextToSpeechService extends Component
             'filename' => $filename,
         ]);
         Queue::push($job);
+
 
     }
 
@@ -132,6 +135,7 @@ class TextToSpeechService extends Component
 
         $input = new SynthesisInput();
 
+        $content = html_entity_decode($content);
         //Check if content is SSML or plain text
         if (str_contains($content, '<speak>')) {
             $input->setSsml($content);
