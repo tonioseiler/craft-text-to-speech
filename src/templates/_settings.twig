@@ -63,9 +63,6 @@
                 voice: {
                     value: siteSettings ? siteSettings.voice,
                     options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getVoices(siteSettings.language)
-                },
-                button: {
-                    value: '<button class="btn small" type="button">Test voice</button>'
                 }
             }|filter
         }) %}
@@ -90,10 +87,6 @@
                 type: 'select',
                 heading: "Voice"|t('app'),
                 info: 'Compatible voices with <a href="https://cloud.google.com/text-to-speech/docs/ssml" target="_blank">SSML tags</a>: Neutral2, Studio, Wavenet, Standard and News'
-            },
-            button: {
-                type: 'html',
-                heading: "Action"|t('app'),
             }
         }|filter,
         rows: siteRows,

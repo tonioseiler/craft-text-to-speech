@@ -151,7 +151,9 @@ class TextToSpeechService extends Component
     {
         $content = "";
         foreach ($fields as $field){
-            $content .= $entry->{$field} .". ";
+            if(isset($entry->{$field})) {
+                $content .= $entry->{$field} . ". ";
+            }
         }
         //strip html tags
         $content = strip_tags($content);
