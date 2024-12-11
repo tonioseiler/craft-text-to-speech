@@ -61,13 +61,15 @@ class TextToSpeechService extends Component
     /**
      * @throws ApiException
      */
-    public function getVoices(string $language = 'en-US' ): array
+    public function getVoices(string $language = "" ): array
     {
-        if(!$this->client) {
+        if (!$this->client) {
             return [];
         }
         $request = new ListVoicesRequest();
-        $request->setLanguageCode($language);
+        if ($language) {
+            $request->setLanguageCode($language);
+        }
 
         $response = $this->client->listVoices($request);
 
@@ -91,20 +93,54 @@ class TextToSpeechService extends Component
         return $voiceList;
     }
 
+    public function getLanguages() :array
+    {
+        if (!$this->client) {
+            return [];
+        }
+        $request = new ListVoicesRequest();
+
+        $response = $this->client->listVoices($request);
+
+        $voices = $response->getVoices();
+        $languages = [];
+
+
+        foreach ($voices as $voice) {
+            $langs = $voice->getLanguageCodes();
+            if(isset($langs[0])){
+                $language = $langs[0];
+                if(!in_array($language, $languages)){
+                    $languages[] = $language;
+                }
+            }
+        }
+
+        $languages = array_map(function($language){
+            return [
+                'label' => $language,
+                'value' => $language,
+            ];
+        }, $languages);
+
+        return $languages;
+    }
+
+    protected function getFileName(Entry $entry): string
+    {
+        return $entry->section->handle . "-" . $entry->slug . "-" . $entry->site->handle;
+    }
+
     public function generateAudioFromTemplate(Entry $entry): void
     {
         $template = $this->settings->getSectionByHandle($entry->section->handle)['template'];
         $content = Craft::$app->view->renderTemplate($template, ['entry' => $entry], View::TEMPLATE_MODE_SITE);
-        $siteHandle = $entry->site->handle;
-        $filename = $entry->section->handle . "-" . $entry->slug . "-" . $siteHandle;
-
-        //$this->generateAudio($content, $siteHandle, $filename);
 
         // Call the job to generate the audio
         $job = new GenerateTTSJob([
             'content' => $content,
-            'siteHandle' => $siteHandle,
-            'filename' => $filename,
+            'siteHandle' => $entry->site->handle,
+            'filename' => $this->getFileName($entry),
         ]);
         Queue::push($job);
 
@@ -113,6 +149,20 @@ class TextToSpeechService extends Component
 
     public function generateAudioFromFields(Entry $entry, array $fields): void
     {
+        $content = "";
+        foreach ($fields as $field){
+            $content .= $entry->{$field} .". ";
+        }
+        //strip html tags
+        $content = strip_tags($content);
+
+        // Call the job to generate the audio
+        $job = new GenerateTTSJob([
+            'content' => $content,
+            'siteHandle' => $entry->site->handle,
+            'filename' => $this->getFileName($entry),
+        ]);
+        Queue::push($job);
 
     }
 
@@ -136,6 +186,7 @@ class TextToSpeechService extends Component
         $input = new SynthesisInput();
 
         $content = html_entity_decode($content);
+
         //Check if content is SSML or plain text
         if (str_contains($content, '<speak>')) {
             $input->setSsml($content);
@@ -143,8 +194,9 @@ class TextToSpeechService extends Component
             $input->setText($content);
         }
 
+
         $voice = new VoiceSelectionParams();
-        $voice->setLanguageCode($site->language);
+        $voice->setLanguageCode($this->settings->voices[$siteHandle]['language'] ?? $site->language);
         $voice->setName($this->settings->voices[$siteHandle]['voice']);
 
         $audioConfig = new AudioConfig();

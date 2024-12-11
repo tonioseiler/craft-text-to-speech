@@ -3,6 +3,13 @@
 
 {% import '_includes/forms.twig' as forms %}
 
+{{ forms.lightswitchField({
+    label: 'Enable Text-to-Speech',
+    id: 'enabled',
+    name: 'enabled',
+    on: settings.enabled,
+    instructions: 'Toggle to enable or disable the Text-to-Speech functionality.'
+}) }}
 
 {{ forms.textareaField({
     label: 'Credentials JSON',
@@ -15,6 +22,7 @@
 
 
 {% if settings.credentialsJson %}
+
     <hr/>
 
     <div class="field">
@@ -23,7 +31,7 @@
         {{ forms.select({
             id: 'attachmentVolumeId',
             name: 'attachmentVolumeId',
-            options: craft.museumPlus.getVolumes(),
+            options: settings.getVolumes(),
             value: settings['attachmentVolumeId']})
         }}
 
@@ -47,11 +55,14 @@
         {% set siteSettings = settings['voices'][site.handle] ?? null %}
         {% set siteRows = siteRows|merge({
             (site.handle): {
-                heading: site.name|t('site')|e,
-                language: site.language,
+                heading: site.name|t('site')|e ~ " (" ~ site.language ~ ")",
+                language: {
+                    value: siteSettings ? siteSettings.language,
+                    options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getLanguages()
+                },
                 voice: {
                     value: siteSettings ? siteSettings.voice,
-                    options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getVoices(site.language)
+                    options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getVoices(siteSettings.language)
                 },
                 button: {
                     value: '<button class="btn small" type="button">Test voice</button>'
@@ -72,9 +83,8 @@
                 thin: true
             },
             language: {
-                type: 'heading',
-                heading: "Language"|t('app'),
-                thin: true
+                type: 'select',
+                heading: "Languages"|t('app'),
             },
             voice: {
                 type: 'select',
@@ -95,111 +105,70 @@
 
     <hr/>
 
-    {{ forms.select({
-        label: 'Select Option',
-        id: 'type',
-        name: 'type',
-        value: settings.type,
-        options: [
-            { label: 'Template', value: 'template' },
-            { label: 'Fields', value: 'fields' }
-        ]
-    }) }}
-
-    {% if settings.type == 'template' %}
-        {% set sectionRows = [] %}
+    {% set sectionRows = [] %}
 
 
-        {# New column to add the handle field if you don't want to use views #}
+    {# New column to add the handle field if you don't want to use views #}
 
-        {% for section in craft.app.entries.getAllSections() %}
-            {% set sectionSettings = settings['sections'][section.handle] ?? null %}
+    {% for section in craft.app.entries.getAllSections() %}
+        {% set sectionSettings = settings['sections'][section.handle] ?? null %}
 
-            {% set sectionRows = sectionRows|merge({
-                (section.handle): {
-                    heading: section.name|t('site')|e,
-                    template: {
-                        value: sectionSettings ? sectionSettings.template,
-                    },
-                }|filter
-            }) %}
-
-        {% endfor %}
-
-
-
-        {{ forms.editableTableField({
-            label: "Sections"|t('app'),
-            instructions: "Define the templates for each section"|t('app'),
-            id: 'sections',
-            name: 'sections',
-            cols: {
-                heading: {
-                    type: 'heading',
-                    heading: "Section"|t('app'),
-                    thin: true
+        {% set sectionRows = sectionRows|merge({
+            (section.handle): {
+                heading: section.name|t('site')|e,
+                type: {
+                    value: sectionSettings ? sectionSettings.type,
+                    options: [
+                        { label: 'Template', value: 'template' },
+                        { label: 'Fields', value: 'fields' }
+                    ]
                 },
                 template: {
-                    type: 'template',
-                    heading: "Template"|t('app'),
-                    info: 'Leave blank if entries don’t want TTS'|t('app'),
-                    code: true
-                }
-            }|filter,
-            rows: sectionRows,
-            fullWidth: true,
-            allowAdd: false,
-            allowDelete: false,
-            allowReorder: false
-        }) }}
-
-    {% endif %}
-
-
-    {% if settings.type == 'fields' %}
-        {% set fieldsRows = [] %}
-
-        {% for section in craft.app.entries.getAllSections() %}
-            {% set fieldsSettings = settings['fields'][section.handle] ?? null %}
-
-            {% set fieldsRows = fieldsRows|merge({
-                (section.handle): {
-                    heading: section.name|t('site')|e,
-                    fields: {
-                        value: fieldsSettings ? fieldsSettings.fields,
-                    },
-                }|filter
-            }) %}
-
-        {% endfor %}
-
-
-
-        {{ forms.editableTableField({
-            label: "Fields"|t('app'),
-            instructions: "Define the fields for each section"|t('app'),
-            id: 'fields',
-            name: 'fields',
-            cols: {
-                heading: {
-                    type: 'heading',
-                    heading: "Section"|t('app'),
-                    thin: true
+                    value: sectionSettings ? sectionSettings.template,
                 },
                 fields: {
-                    type: 'singleline',
-                    heading: "Fields"|t('app'),
-                    info: 'Leave blank if entries don’t want TTS'|t('app'),
-                    code: true
-                }
-            }|filter,
-            rows: fieldsRows,
-            fullWidth: true,
-            allowAdd: false,
-            allowDelete: false,
-            allowReorder: false
-        }) }}
-    {% endif %}
+                    value: sectionSettings ? sectionSettings.fields,
+                },
+            }|filter
+        }) %}
+
+    {% endfor %}
+
+
+
+    {{ forms.editableTableField({
+        label: "Sections"|t('app'),
+        instructions: "Define the templates for each section"|t('app'),
+        id: 'sections',
+        name: 'sections',
+        cols: {
+            heading: {
+                type: 'heading',
+                heading: "Section"|t('app'),
+                thin: true
+            },
+            type: {
+                type: 'select',
+                heading: "Type"|t('app'),
+            },
+            template: {
+                type: 'template',
+                heading: "Template"|t('app'),
+                code: true
+            },
+            fields: {
+                type: 'singleline',
+                heading: "Fields"|t('app'),
+                code: true
+            }
+        }|filter,
+        rows: sectionRows,
+        fullWidth: true,
+        allowAdd: false,
+        allowDelete: false,
+        allowReorder: false
+    }) }}
+
 
 {% else %}
     <p id="apiKeyMessage" style="color: red;">Please fill in the API Key to enable the other fields.</p>

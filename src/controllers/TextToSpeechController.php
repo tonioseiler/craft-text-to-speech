@@ -27,10 +27,14 @@ class TextToSpeechController extends Controller
         $settings = TextToSpeech::$plugin->getSettings();
 
         foreach ($settings->getSectionsWithTemplate() as $handle => $section) {
-            $template = $section['template'];
-            $entries = Entry::find()->section($handle)->all();
+            $entries = Entry::find()->section($handle)->site('*')->all();
             foreach ($entries as $entry) {
-                TextToSpeech::$plugin->textToSpeechService->generateAudioFromTemplate($entry);
+                if($section['type'] === 'template') {
+                    TextToSpeech::$plugin->textToSpeechService->generateAudioFromTemplate($entry);
+                }elseif($section['type'] === 'fields') {
+                    $fields = explode(',', $section['fields']);
+                    TextToSpeech::$plugin->textToSpeechService->generateAudioFromFields($entry, $fields);
+                }
             }
         }
 

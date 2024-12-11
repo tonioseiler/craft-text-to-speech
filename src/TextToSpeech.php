@@ -91,10 +91,14 @@ class TextToSpeech extends Plugin
             if(!$entry->section){
                 return;
             }
-            if (!$entry->getIsDraft() && !$entry->getIsRevision()) {
+            $settings = TextToSpeech::getInstance()->getSettings();
+            if (!$entry->getIsDraft() && !$entry->getIsRevision() && $settings->enabled) {
                 $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($entry->section->handle);
-                if (isset($sectionSettings['template'])) {
+                if ($sectionSettings['type'] === 'template') {
                     TextToSpeech::getInstance()->textToSpeechService->generateAudioFromTemplate($entry);
+                }elseif($sectionSettings['type'] === 'fields'){
+                    $fields = explode(',', $sectionSettings['fields']);
+                    TextToSpeech::getInstance()->textToSpeechService->generateAudioFromFields($entry, $fields);
                 }
             }
         });

@@ -11,16 +11,13 @@ use furbo\crafttexttospeech\TextToSpeech;
  */
 class Settings extends Model
 {
+    public bool $enabled = false;
     public string $credentialsJson = '';
     public $attachmentVolumeId = 0;
     public string $folder = '';
     public $voices = [];
 
     public $sections = [];
-
-    public $fields = [];
-
-    public $type = "template";
 
 
     public function rules(): array
@@ -40,6 +37,15 @@ class Settings extends Model
         return array_filter($this->sections, function ($section) {
             return isset($section['template']) && $section['template'] !== '';
         });
+    }
+
+    public function getVolumes() {
+        $volumes = Craft::$app->volumes->allVolumes;
+        $ret = [];
+        foreach ($volumes as $v) {
+            $ret[$v->id] = $v->name;
+        }
+        return $ret;
     }
 
 }
