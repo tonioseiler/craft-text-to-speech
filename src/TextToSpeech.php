@@ -77,7 +77,7 @@ class TextToSpeech extends Plugin
                 try {
                     $section = $event->sender->getSection();
                     $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($section->handle);
-                    if(isset($sectionSettings['template'])) {
+                    if($sectionSettings['enabled']) {
                         $event->behaviors[$section->handle] = TextToSpeechBehavior::class;
                     }
                 }catch (\Exception $e){
@@ -94,11 +94,13 @@ class TextToSpeech extends Plugin
             $settings = TextToSpeech::getInstance()->getSettings();
             if (!$entry->getIsDraft() && !$entry->getIsRevision() && $settings->enabled) {
                 $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($entry->section->handle);
-                if ($sectionSettings['type'] === 'template') {
-                    TextToSpeech::getInstance()->textToSpeechService->generateAudioFromTemplate($entry);
-                }elseif($sectionSettings['type'] === 'fields'){
-                    $fields = explode(',', $sectionSettings['fields']);
-                    TextToSpeech::getInstance()->textToSpeechService->generateAudioFromFields($entry, $fields);
+                if($sectionSettings['enabled']) {
+                    if ($sectionSettings['type'] === 'template') {
+                        TextToSpeech::getInstance()->textToSpeechService->generateAudioFromTemplate($entry);
+                    } elseif ($sectionSettings['type'] === 'fields') {
+                        $fields = explode(',', $sectionSettings['fields']);
+                        TextToSpeech::getInstance()->textToSpeechService->generateAudioFromFields($entry, $fields);
+                    }
                 }
             }
         });

@@ -109,6 +109,9 @@
         {% set sectionRows = sectionRows|merge({
             (section.handle): {
                 heading: section.name|t('site')|e,
+                enabled: {
+                    value: sectionSettings ? sectionSettings.enabled ?? false,
+                },
                 type: {
                     value: sectionSettings ? sectionSettings.type,
                     options: [
@@ -139,6 +142,10 @@
                 type: 'heading',
                 heading: "Section"|t('app'),
                 thin: true
+            },
+            enabled: {
+                type: 'lightswitch',
+                heading: "Enabled"|t('app'),
             },
             type: {
                 type: 'select',
