@@ -20,9 +20,11 @@ use Google\ApiCore\ValidationException;
 use Google\Cloud\TextToSpeech\V1\AudioConfig;
 use Google\Cloud\TextToSpeech\V1\AudioEncoding;
 use Google\Cloud\TextToSpeech\V1\Client\TextToSpeechClient;
+use Google\Cloud\TextToSpeech\V1\Client\TextToSpeechLongAudioSynthesizeClient;
 use Google\Cloud\TextToSpeech\V1\ListVoicesRequest;
 use Google\Cloud\TextToSpeech\V1\SsmlVoiceGender;
 use Google\Cloud\TextToSpeech\V1\SynthesisInput;
+use Google\Cloud\TextToSpeech\V1\SynthesizeLongAudioRequest;
 use Google\Cloud\TextToSpeech\V1\SynthesizeSpeechRequest;
 use Google\Cloud\TextToSpeech\V1\VoiceSelectionParams;
 use yii\base\Component;
@@ -38,28 +40,46 @@ class TextToSpeechService extends Component
 
     private Settings $settings;
 
+    private array $credentials;
+
     public function __construct()
     {
         parent::__construct();
 
+        $this->settings = TextToSpeech::$plugin->getSettings();
+        $this->credentials = json_decode($this->settings->credentialsJson, true);
+
+    }
+
+    protected function initSynthesizeClient(): void
+    {
         try {
-            $this->settings = TextToSpeech::$plugin->getSettings();
-
-            $credentials = json_decode($this->settings->credentialsJson, true);
-
             $this->client = new TextToSpeechClient([
-                'credentials' => $credentials,
+                'credentials' => $this->credentials,
             ]);
         } catch (ValidationException $e) {
             Craft::error('Failed to create TextToSpeechClient: ' . $e->getMessage(), __METHOD__);
         } catch (\Exception $e) {
             Craft::error('An error occurred: ' . $e->getMessage(), __METHOD__);
         }
+    }
 
+    protected function initLongAudioSynthesizeClient(): void
+    {
+        try {
+            $this->client = new TextToSpeechLongAudioSynthesizeClient([
+                'credentials' => $this->credentials,
+            ]);
+        } catch (ValidationException $e) {
+            Craft::error('Failed to create TextToSpeechClient: ' . $e->getMessage(), __METHOD__);
+        } catch (\Exception $e) {
+            Craft::error('An error occurred: ' . $e->getMessage(), __METHOD__);
+        }
     }
 
     public function validateCredentials(): bool
     {
+        $this->initSynthesizeClient();
         return $this->client !== null;
     }
 
@@ -68,6 +88,8 @@ class TextToSpeechService extends Component
      */
     public function getVoices(string $language = "" ): array
     {
+        $this->initSynthesizeClient();
+
         if (!$this->client) {
             return [];
         }
@@ -100,6 +122,8 @@ class TextToSpeechService extends Component
 
     public function getLanguages() :array
     {
+        $this->initSynthesizeClient();
+
         if (!$this->client) {
             return [];
         }
@@ -184,40 +208,72 @@ class TextToSpeechService extends Component
      */
     public function generateAudio(string $content, string $siteHandle, string $filename): ?Asset
     {
+        $contents = [];
+        $dataStream = '';
+        $content = html_entity_decode($content);
+
+        // Check if the $content is loger than 5000 bytes
+        if(strlen($content) > 5000){
+            //$content = substr($content, 0, 5000);
+            // I need to Split the content maximum 5000 characters and before the end of the sentence
+            $maxLength = 5000;
+
+            while (strlen($content) > 0) {
+                if (strlen($content) > $maxLength) {
+                    $chunk = substr($content, 0, $maxLength);
+                    $lastPeriodPos = strrpos($chunk, ".");
+                    if ($lastPeriodPos !== false) {
+                        $chunk = substr($chunk, 0, $lastPeriodPos + 1);
+                    }
+                } else {
+                    $chunk = $content;
+                }
+                $contents[] = $chunk;
+                $content = substr($content, strlen($chunk));
+            }
+        }else{
+            $contents[] = $content;
+        }
+
+
+        $this->initSynthesizeClient();
+
         $site = Craft::$app->sites->getSiteByHandle($siteHandle);
+
         if(!$this->client) {
             return null;
         }
 
+        foreach ($contents as $c) {
+            $input = new SynthesisInput();
 
-        $input = new SynthesisInput();
+            //Check if content is SSML or plain text
+            if (str_contains($c, '<speak>')) {
+                $input->setSsml($c);
+            } else {
+                $input->setText($c);
+            }
 
-        $content = html_entity_decode($content);
 
-        //Check if content is SSML or plain text
-        if (str_contains($content, '<speak>')) {
-            $input->setSsml($content);
-        } else {
-            $input->setText($content);
+            $voice = new VoiceSelectionParams();
+            $voice->setLanguageCode($this->settings->voices[$siteHandle]['language'] ?? $site->language);
+            $voice->setName($this->settings->voices[$siteHandle]['voice']);
+
+            $audioConfig = new AudioConfig();
+            $audioConfig->setAudioEncoding(AudioEncoding::MP3);
+
+            $request = new SynthesizeSpeechRequest();
+
+            $request->setInput($input);
+            $request->setVoice($voice);
+            $request->setAudioConfig($audioConfig);
+
+
+            $response = $this->client->synthesizeSpeech($request);
+
+            $dataStream .= $response->getAudioContent();
         }
 
-
-        $voice = new VoiceSelectionParams();
-        $voice->setLanguageCode($this->settings->voices[$siteHandle]['language'] ?? $site->language);
-        $voice->setName($this->settings->voices[$siteHandle]['voice']);
-
-        $audioConfig = new AudioConfig();
-        $audioConfig->setAudioEncoding(AudioEncoding::MP3);
-
-        $request = new SynthesizeSpeechRequest();
-        $request->setInput($input);
-        $request->setVoice($voice);
-        $request->setAudioConfig($audioConfig);
-
-
-        $response = $this->client->synthesizeSpeech($request);
-
-        $dataStream = $response->getAudioContent();
 
         //Check if the filename already exists
         $asset = Asset::find()
