@@ -28,3 +28,20 @@ composer require furbo/craft-text-to-speech
 # tell Craft to install the plugin
 ./craft plugin/install text-to-speech
 ```
+
+## Configuration
+
+### Google API Access
+//TBD
+
+### Storage directory for mp3 files
+
+### Sections
+
+#### Fields
+
+#### Templates
+
+#### Voices
+
+#### SSML
