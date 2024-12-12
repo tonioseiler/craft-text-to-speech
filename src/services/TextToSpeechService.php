@@ -186,8 +186,10 @@ class TextToSpeechService extends Component
                 $content .= $entry->{$field} . ". ";
             }
         }
-        //strip html tags
-        $content = strip_tags($content);
+        //strip html tags if the <speak> tag is not present
+        if(!str_contains($content, '<speak>'))
+            $content = strip_tags($content);
+        
 
         // Call the job to generate the audio
         $job = new GenerateTTSJob([
