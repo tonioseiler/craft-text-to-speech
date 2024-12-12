@@ -27,6 +27,6 @@ class TextToSpeechBehavior extends Behavior
             return "";
         }
 
-        return $asset->getUrl();
+        return $asset->getUrl() . "?v=" . $asset->dateModified->getTimestamp();
     }
 }
