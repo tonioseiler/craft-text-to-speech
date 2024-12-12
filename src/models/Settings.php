@@ -32,10 +32,10 @@ class Settings extends Model
         return $this->sections[$handle] ?? null;
     }
 
-    public function getSectionsWithTemplate()
+    public function getSectionsEnabled()
     {
         return array_filter($this->sections, function ($section) {
-            return isset($section['template']) && $section['template'] !== '';
+            return isset($section['enabled']) && $section['enabled'];
         });
     }
 

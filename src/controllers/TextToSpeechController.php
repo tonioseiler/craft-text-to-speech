@@ -26,7 +26,7 @@ class TextToSpeechController extends Controller
 
         $settings = TextToSpeech::$plugin->getSettings();
 
-        foreach ($settings->getSectionsWithTemplate() as $handle => $section) {
+        foreach ($settings->getSectionsEnabled() as $handle => $section) {
             $entries = Entry::find()->section($handle)->site('*')->all();
             foreach ($entries as $entry) {
                 if($section['enabled']) {
