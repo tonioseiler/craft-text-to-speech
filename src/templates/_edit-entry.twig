@@ -1,0 +1,42 @@
+{% import '_includes/forms.twig' as forms %}
+
+<div class="meta" style="padding-top: 20px; padding-bottom: 20px;">
+    <audio controls>
+        <source src="{{ entry.getTTSAudio }}" type="audio/mpeg">
+        Your browser does not support the audio tag.
+    </audio>
+
+    <div class="buttons">
+        <button id="generate-tts" type="button" class="btn" data-action="text-to-speech/text-to-speech/generate-tts" data-id="{{ entry.id }}">Generate TTS Audio</button>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('generate-tts').addEventListener('click', function() {
+            this.setAttribute('disabled', 'disabled');
+            //add opacity
+            this.style.opacity = 0.5;
+            const action = this.getAttribute('data-action');
+            const entryId = this.getAttribute('data-id');
+            const currentUrl = window.location.href;
+
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', currentUrl, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        // reload
+                        window.location.reload();
+                    } else {
+                        window.location.reload();
+                    }
+                }
+            };
+            xhr.send(`entryId=${entryId}&action=${action}&${Craft.csrfTokenName}=${Craft.csrfTokenValue}&siteId=${Craft.siteId}`);
+        });
+    });
+</script>

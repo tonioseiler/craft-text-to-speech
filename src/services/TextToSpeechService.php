@@ -42,6 +42,8 @@ class TextToSpeechService extends Component
 
     private array $credentials;
 
+    const MAX_TEXT_LENGTH = 4500;
+
     public function __construct()
     {
         parent::__construct();
@@ -211,12 +213,15 @@ class TextToSpeechService extends Component
         $contents = [];
         $dataStream = '';
         $content = html_entity_decode($content);
+        $isSSML = str_contains($content, '<speak>');
+        // Remove the SSML tags
+        if($isSSML){
+            $content = preg_replace('/<speak>|<\/speak>/', '', $content);
+        }
 
-        // Check if the $content is loger than 5000 bytes
-        if(strlen($content) > 5000){
-            //$content = substr($content, 0, 5000);
-            // I need to Split the content maximum 5000 characters and before the end of the sentence
-            $maxLength = 5000;
+        // Check if the $content is longer than MAX_TEXT_LENGTH bytes
+        if(strlen($content) > self::MAX_TEXT_LENGTH){
+            $maxLength = self::MAX_TEXT_LENGTH;
 
             while (strlen($content) > 0) {
                 if (strlen($content) > $maxLength) {
@@ -244,12 +249,14 @@ class TextToSpeechService extends Component
             return null;
         }
 
+
         foreach ($contents as $c) {
+
             $input = new SynthesisInput();
 
             //Check if content is SSML or plain text
-            if (str_contains($c, '<speak>')) {
-                $input->setSsml($c);
+            if ($isSSML) {
+                $input->setSsml("<speak>" . $c . "</speak>");
             } else {
                 $input->setText($c);
             }

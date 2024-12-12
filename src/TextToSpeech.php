@@ -7,8 +7,11 @@ use craft\base\Model;
 use craft\base\Plugin;
 use craft\elements\Entry;
 use craft\events\DefineBehaviorsEvent;
+use craft\events\DefineHtmlEvent;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterTemplateRootsEvent;
 use craft\services\Utilities;
+use craft\web\View;
 use furbo\crafttexttospeech\behaviors\TextToSpeechBehavior;
 use furbo\crafttexttospeech\models\Settings;
 use furbo\crafttexttospeech\services\TextToSpeechService;
@@ -68,9 +71,22 @@ class TextToSpeech extends Plugin
 
     private function attachEventHandlers(): void
     {
-        // Register event handlers here ...
-        // (see https://craftcms.com/docs/5.x/extend/events.html to get started)
-        \yii\base\Event::on(
+
+
+        Event::on(
+            Entry::class,
+            Entry::EVENT_DEFINE_SIDEBAR_HTML,
+            function (DefineHtmlEvent $event) {
+                //Render template
+                $view = Craft::$app->view->renderTemplate('text-to-speech/_edit-entry', [
+                    'entry' => $event->sender
+                ]);
+                $event->html .= $view;
+            }
+
+        );
+
+        Event::on(
             Entry::class,
             Entry::EVENT_DEFINE_BEHAVIORS,
             function (DefineBehaviorsEvent $event) {
@@ -84,26 +100,6 @@ class TextToSpeech extends Plugin
                 }
             }
         );
-
-        //After save entry, generate audio file in a job only for sections with a template
-        Event::on(Entry::class, Entry::EVENT_AFTER_SAVE, function($event) {
-            $entry = $event->sender;
-            if(!$entry->section){
-                return;
-            }
-            $settings = TextToSpeech::getInstance()->getSettings();
-            if (!$entry->getIsDraft() && !$entry->getIsRevision() && $settings->enabled) {
-                $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($entry->section->handle);
-                if($sectionSettings['enabled']) {
-                    if ($sectionSettings['type'] === 'template') {
-                        TextToSpeech::getInstance()->textToSpeechService->generateAudioFromTemplate($entry);
-                    } elseif ($sectionSettings['type'] === 'fields') {
-                        $fields = explode(',', $sectionSettings['fields']);
-                        TextToSpeech::getInstance()->textToSpeechService->generateAudioFromFields($entry, $fields);
-                    }
-                }
-            }
-        });
 
 
         Event::on(Utilities::class, Utilities::EVENT_REGISTER_UTILITIES, function (RegisterComponentTypesEvent $event) {

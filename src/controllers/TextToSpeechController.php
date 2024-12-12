@@ -41,4 +41,24 @@ class TextToSpeechController extends Controller
         }
 
     }
+
+    public function actionGenerateTts()
+    {
+        $this->requirePostRequest();
+        $params = Craft::$app->getRequest()->getBodyParams();
+
+        $entry = Entry::find()->id($params['entryId'])->siteId($params['siteId'])->one();
+        if($entry){
+            $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($entry->section->handle);
+            if($sectionSettings['enabled']) {
+                if ($sectionSettings['type'] === 'template') {
+                    TextToSpeech::getInstance()->textToSpeechService->generateAudioFromTemplate($entry);
+                } elseif ($sectionSettings['type'] === 'fields') {
+                    $fields = explode(',', $sectionSettings['fields']);
+                    TextToSpeech::getInstance()->textToSpeechService->generateAudioFromFields($entry, $fields);
+                }
+            }
+        }
+        exit();
+    }
 }
