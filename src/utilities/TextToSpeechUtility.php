@@ -20,11 +20,6 @@ class TextToSpeechUtility extends Utility
         return 'text-to-speech-utility';
     }
 
-    public static function icon(): ?string
-    {
-        return 'wrench';
-    }
-
     static function contentHtml(): string
     {
         return Craft::$app->view->renderTemplate('text-to-speech/_utilities.twig');
