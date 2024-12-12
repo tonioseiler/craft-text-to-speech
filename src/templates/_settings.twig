@@ -21,7 +21,7 @@
 }) }}
 
 
-{% if settings.credentialsJson %}
+{% if craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.validateCredentials() %}
 
     <hr/>
 
@@ -62,7 +62,7 @@
                 },
                 voice: {
                     value: siteSettings ? siteSettings.voice,
-                    options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getVoices(siteSettings.language)
+                    options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getVoices(siteSettings.language ?? site.language)
                 }
             }|filter
         }) %}

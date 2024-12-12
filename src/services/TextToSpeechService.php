@@ -58,6 +58,11 @@ class TextToSpeechService extends Component
 
     }
 
+    public function validateCredentials(): bool
+    {
+        return $this->client !== null;
+    }
+
     /**
      * @throws ApiException
      */
