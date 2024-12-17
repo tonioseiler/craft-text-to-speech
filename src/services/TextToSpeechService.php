@@ -40,7 +40,7 @@ class TextToSpeechService extends Component
 
     private Settings $settings;
 
-    private array $credentials;
+    private array $credentials = [];
 
     const MAX_TEXT_LENGTH = 4500;
 
@@ -49,7 +49,9 @@ class TextToSpeechService extends Component
         parent::__construct();
 
         $this->settings = TextToSpeech::$plugin->getSettings();
-        $this->credentials = json_decode($this->settings->credentialsJson, true);
+        if($this->settings->credentialsJson) {
+            $this->credentials = json_decode($this->settings->credentialsJson, true);
+        }
 
     }
 

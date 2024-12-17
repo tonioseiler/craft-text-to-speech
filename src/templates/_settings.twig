@@ -97,7 +97,7 @@
 
     {# New column to add the handle field if you don't want to use views #}
 
-    {% for section in craft.app.entries.getAllSections() %}
+    {% for section in craft.app.sections.allSections %}
         {% set sectionSettings = settings['sections'][section.handle] ?? null %}
 
         {% set sectionRows = sectionRows|merge({

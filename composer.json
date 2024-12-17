@@ -13,8 +13,8 @@
     "rss": "https://github.com/tonioseiler/craft-text-to-speech/releases.atom"
   },
   "require": {
-    "php": ">=8.2",
-    "craftcms/cms": "^5.4.0",
+    "php": ">=8.0.2",
+    "craftcms/cms": "^4.0.0",
     "google/cloud-text-to-speech": "^1.12.1"
   },
   "require-dev": {
@@ -41,7 +41,7 @@
   "config": {
     "sort-packages": true,
     "platform": {
-      "php": "8.2"
+      "php": "8.0.2"
     },
     "allow-plugins": {
       "yiisoft/yii2-composer": true,
