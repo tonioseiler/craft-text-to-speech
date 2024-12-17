@@ -48,9 +48,13 @@ class TextToSpeechService extends Component
     {
         parent::__construct();
 
-        if($this->settings->credentialsJson) {
-            $this->settings = TextToSpeech::$plugin->getSettings();
-            $this->credentials = json_decode($this->settings->credentialsJson, true);
+        $this->settings = TextToSpeech::$plugin->getSettings();
+        $this->credentials = [];
+        if ($this->settings->credentialsJson) {
+            $decodedCredentials = json_decode($this->settings->credentialsJson, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $this->credentials = $decodedCredentials;
+            }
         }
 
     }
