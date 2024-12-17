@@ -7,13 +7,34 @@
     </audio>
 
     <div class="buttons">
-        <button id="generate-tts" type="button" class="btn" data-action="text-to-speech/text-to-speech/generate-tts" data-id="{{ entry.id }}">Generate TTS Audio</button>
+        <button id="preview-modal" class="btn" type="button">{{ 'Preview Script'|t('text-to-speech') }}</button>
+        <button id="generate-tts" type="button" class="btn" data-action="text-to-speech/text-to-speech/generate-tts" data-id="{{ entry.id }}">
+            {{ 'Generate TTS Audio'|t('text-to-speech') }}</button>
     </div>
 
 </div>
 
+<!-- Modal Structure -->
+<div id="previewModal" class="modal" style="display: none; overflow: scroll">
+    <div class="body">
+        <div class="content">
+            <h2>{{ 'Preview Text to Generate the Audio'|t('tex-to-speech') }}</h2>
+            <div>
+                {{ entry.getTTSContent() }}
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
+        $modal = new Garnish.Modal($('#previewModal'));
+        $modal.hide();
+        document.getElementById('preview-modal').addEventListener('click', function() {
+            $modal.show();
+        });
+
         document.getElementById('generate-tts').addEventListener('click', function() {
             this.setAttribute('disabled', 'disabled');
             //add opacity

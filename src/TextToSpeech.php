@@ -77,11 +77,15 @@ class TextToSpeech extends Plugin
             Entry::class,
             Entry::EVENT_DEFINE_SIDEBAR_HTML,
             function (DefineHtmlEvent $event) {
-                //Render template
-                $view = Craft::$app->view->renderTemplate('text-to-speech/_edit-entry', [
-                    'entry' => $event->sender
-                ]);
-                $event->html .= $view;
+                $entry = $event->sender;
+                $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($entry->section->handle);
+                if($sectionSettings['enabled']) {
+                    //Render template
+                    $view = Craft::$app->view->renderTemplate('text-to-speech/_edit-entry', [
+                        'entry' => $event->sender
+                    ]);
+                    $event->html .= $view;
+                }
             }
 
         );

@@ -157,48 +157,42 @@ class TextToSpeechService extends Component
         return $languages;
     }
 
-    protected function getFileName(Entry $entry): string
+    public function getFileName(Entry $entry): string
     {
         return $entry->section->handle . "-" . $entry->slug . "-" . $entry->site->handle;
     }
 
-    public function generateAudioFromTemplate(Entry $entry): void
+    public function getContentFromTemplate(Entry $entry): string
     {
         $template = $this->settings->getSectionByHandle($entry->section->handle)['template'];
         $content = Craft::$app->view->renderTemplate($template, ['entry' => $entry], View::TEMPLATE_MODE_SITE);
 
-        // Call the job to generate the audio
-        $job = new GenerateTTSJob([
-            'content' => $content,
-            'siteHandle' => $entry->site->handle,
-            'filename' => $this->getFileName($entry),
-        ]);
-        Queue::push($job);
-
-
+        return $content;
     }
 
-    public function generateAudioFromFields(Entry $entry, array $fields): void
+    public function getContentFromFields(Entry $entry, array $fields): string
     {
         $content = "";
         foreach ($fields as $field){
             if(isset($entry->{$field})) {
-                $content .= $entry->{$field} . ". ";
+                $content .= $entry->{$field} . ". \n";
             }
         }
         //strip html tags if the <speak> tag is not present
         if(!str_contains($content, '<speak>'))
             $content = strip_tags($content);
-        
 
-        // Call the job to generate the audio
+        return $content;
+    }
+
+    public function executeTTSJob(Entry $entry, string $content)
+    {
         $job = new GenerateTTSJob([
             'content' => $content,
             'siteHandle' => $entry->site->handle,
             'filename' => $this->getFileName($entry),
         ]);
         Queue::push($job);
-
     }
 
     /**

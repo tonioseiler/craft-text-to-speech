@@ -6,8 +6,10 @@ use Craft;
 use craft\elements\Entry;
 use craft\web\Controller;
 use craft\web\View;
+use furbo\crafttexttospeech\jobs\GenerateTTSJob;
 use furbo\crafttexttospeech\TextToSpeech;
 use yii\web\Response;
+use craft\helpers\Queue;
 
 /**
  * Text To Speech controller
@@ -29,13 +31,9 @@ class TextToSpeechController extends Controller
         foreach ($settings->getSectionsEnabled() as $handle => $section) {
             $entries = Entry::find()->section($handle)->site('*')->all();
             foreach ($entries as $entry) {
-                if($section['enabled']) {
-                    if ($section['type'] === 'template') {
-                        TextToSpeech::$plugin->textToSpeechService->generateAudioFromTemplate($entry);
-                    } elseif ($section['type'] === 'fields') {
-                        $fields = explode(',', $section['fields']);
-                        TextToSpeech::$plugin->textToSpeechService->generateAudioFromFields($entry, $fields);
-                    }
+                $content = $entry->getTTSContent();
+                if(!empty($content)){
+                    TextToSpeech::getInstance()->textToSpeechService->executeTTSJob($entry, $content);
                 }
             }
         }
@@ -51,11 +49,9 @@ class TextToSpeechController extends Controller
         if($entry){
             $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($entry->section->handle);
             if($sectionSettings['enabled']) {
-                if ($sectionSettings['type'] === 'template') {
-                    TextToSpeech::getInstance()->textToSpeechService->generateAudioFromTemplate($entry);
-                } elseif ($sectionSettings['type'] === 'fields') {
-                    $fields = explode(',', $sectionSettings['fields']);
-                    TextToSpeech::getInstance()->textToSpeechService->generateAudioFromFields($entry, $fields);
+                $content = $entry->getTTSContent();
+                if(!empty($content)){
+                    TextToSpeech::getInstance()->textToSpeechService->executeTTSJob($entry, $content);
                 }
             }
         }

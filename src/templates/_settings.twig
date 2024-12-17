@@ -3,16 +3,8 @@
 
 {% import '_includes/forms.twig' as forms %}
 
-{{ forms.lightswitchField({
-    label: 'Enable Text-to-Speech',
-    id: 'enabled',
-    name: 'enabled',
-    on: settings.enabled,
-    instructions: 'Toggle to enable or disable the Text-to-Speech functionality.'
-}) }}
-
 {{ forms.textareaField({
-    label: 'Credentials JSON',
+    label: 'Credentials JSON'|t('text-to-speech'),
     id: 'credentialsJson',
     name: 'credentialsJson',
     value: settings.credentialsJson,
@@ -26,8 +18,10 @@
     <hr/>
 
     <div class="field">
-        <div class="heading"><label id="settings-attachmentVolumeId-label" for="settings-attachmentVolumeId">Save Attachments</label></div>
-        <div id="settings-attachmentVolumeId-instructions" class="instructions"><p>Where the items attachments should be saved.</p></div>
+        <div class="heading"><label id="settings-attachmentVolumeId-label" for="settings-attachmentVolumeId">{{ 'Save
+        Attachments'|t('text-to-speech') }}</label></div>
+        <div id="settings-attachmentVolumeId-instructions" class="instructions"><p>{{ 'Where the items attachments should
+        be saved.'|t('text-to-speech') }}</p></div>
         {{ forms.select({
             id: 'attachmentVolumeId',
             name: 'attachmentVolumeId',
@@ -38,7 +32,7 @@
     </div>
 
     {{ forms.textField({
-        label: 'Folder',
+        label: 'Folder'|t('app'),
         id: 'folder',
         name: 'folder',
         value: settings.folder,
@@ -86,7 +80,7 @@
             voice: {
                 type: 'select',
                 heading: "Voice"|t('app'),
-                info: 'Compatible voices with <a href="https://cloud.google.com/text-to-speech/docs/ssml" target="_blank">SSML tags</a>: Neutral2, Studio, Wavenet, Standard and News'
+                info: 'Compatible voices with <a href="https://cloud.google.com/text-to-speech/docs/ssml" target="_blank">SSML tags</a>: Neutral2, Studio, Wavenet, Standard and News'|t('text-to-speech')
             }
         }|filter,
         rows: siteRows,
@@ -171,5 +165,5 @@
 
 
 {% else %}
-    <p id="apiKeyMessage" style="color: red;">Please fill in the API Key to enable the other fields.</p>
+    <p id="apiKeyMessage" style="color: red;">{{ 'Please fill in the API Key to enable the other fields.'|t('text-to-speech') }}</p>
 {% endif %}

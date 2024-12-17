@@ -29,4 +29,19 @@ class TextToSpeechBehavior extends Behavior
 
         return $asset->getUrl() . "?v=" . $asset->dateModified->getTimestamp();
     }
+
+    public function getTTSContent(): string
+    {
+        $content = '';
+        $entry = $this->owner;
+        $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($entry->section->handle);
+        if ($sectionSettings['type'] === 'template') {
+            $content = TextToSpeech::getInstance()->textToSpeechService->getContentFromTemplate($entry);
+        } elseif ($sectionSettings['type'] === 'fields') {
+            $fields = explode(',', $sectionSettings['fields']);
+            $content = TextToSpeech::getInstance()->textToSpeechService->getContentFromFields($entry, $fields);
+        }
+
+        return $content;
+    }
 }

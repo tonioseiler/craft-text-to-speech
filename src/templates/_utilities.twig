@@ -1,7 +1,11 @@
+<h1>{{ 'Generate TTS Audios'|t('text-to-speech') }}</h1>
+<p>{{ 'Use this tool to generate audio files for all entries with active sections using Google Text-to-Speech AI. Simply
+    click the button below to start the process.'|t('text-to-speech') }}</p>
+
 <form method="post">
     {{ actionInput('text-to-speech/text-to-speech/generate-all-tts') }}
     {{ csrfInput() }}
     <div class="buttons">
-        <button type="submit" class="btn submit secondary">Generate TTS Audios</button>
+        <button type="submit" class="btn submit secondary">{{ 'Generate TTS Audios'|t('text-to-speech') }}</button>
     </div>
 </form>

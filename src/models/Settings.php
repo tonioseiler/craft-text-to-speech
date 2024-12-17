@@ -11,7 +11,6 @@ use furbo\crafttexttospeech\TextToSpeech;
  */
 class Settings extends Model
 {
-    public bool $enabled = false;
     public string $credentialsJson = '';
     public $attachmentVolumeId = 0;
     public string $folder = '';
