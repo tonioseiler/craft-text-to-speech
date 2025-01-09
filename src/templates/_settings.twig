@@ -55,7 +55,7 @@
                     options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getLanguages()
                 },
                 voice: {
-                    value: siteSettings ? siteSettings.voice,
+                    value: siteSettings ? siteSettings.voice|default(''),
                     options: craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getVoices(siteSettings.language ?? site.language)
                 }
             }|filter
