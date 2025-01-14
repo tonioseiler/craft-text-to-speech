@@ -165,7 +165,7 @@ class TextToSpeechService extends Component
 
     public function getFileName(Entry $entry): string
     {
-        return $entry->section->handle . "-" . $entry->slug . "-" . $entry->site->handle;
+        return $entry->section->handle . "-" . substr($entry->slug, 0, 10) . "-" . $entry->id . "-" . $entry->site->handle;
     }
 
     public function getContentFromTemplate(Entry $entry): string

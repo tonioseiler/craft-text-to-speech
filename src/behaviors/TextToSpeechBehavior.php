@@ -16,7 +16,7 @@ class TextToSpeechBehavior extends Behavior
         $entry = $this->owner;
 
         $siteHandle = $entry->site->handle;
-        $filename = $entry->section->handle . "-" . $entry->slug . "-" . $siteHandle . ".mp3";
+        $filename = TextToSpeech::getInstance()->textToSpeechService->getFileName($entry) . ".mp3";
 
         // Find asset by filename
         $asset = Asset::find()
