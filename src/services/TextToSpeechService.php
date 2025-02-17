@@ -242,6 +242,10 @@ class TextToSpeechService extends Component
             $contents[] = $content;
         }
 
+        if(count($contents) > 1){
+            $contents = $this->fixVoiceTags($contents);
+        }
+
 
         $this->initSynthesizeClient();
 
@@ -332,6 +336,46 @@ class TextToSpeechService extends Component
         }
 
         return null;
+    }
+
+    protected function fixVoiceTags(array $contents): array
+    {
+        /*$contents = [
+            'Lorem ipsum <voice name="male-english">dolor sit ament lata',
+            'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore',
+            ' eu fugiat nulla pariatur.</voice>Laboris nit ut ella. <voice name="male-french"> Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore',
+            'nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</voice>'
+        ];*/
+        $fixedContents = [];
+        $openTag = null; // Store the currently open tag
+
+        foreach ($contents as $index => $line) {
+            // If there is an open tag, prepend it to the line
+            if ($openTag) {
+                $line = "<voice name=\"$openTag\">" . $line;
+            }
+
+            // Check for opening voice tag
+            if (preg_match_all('/<voice name="([^"]+)">/', $line, $matches)) {
+                $openTag = end($matches[1]); // Store the tag name
+            }
+
+
+            // Check for closing voice tag
+            if (substr_count($line, '<voice') > substr_count($line, '</voice>')) {
+                $line .= "</voice>";
+            }
+
+            // If we have an open tag at the end of a chunk, close it
+            /*if ($openTag && !preg_match('/<\/voice>/', $line)) {
+                $line .= "</voice>";
+            }*/
+
+            $fixedContents[] = $line;
+        }
+
+        return $fixedContents;
+
     }
 
 }
