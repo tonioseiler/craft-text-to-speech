@@ -404,8 +404,7 @@ class TextToSpeechService extends Component
         $settings = TextToSpeech::$plugin->getSettings();
 
         foreach ($settings->getSectionsEnabled() as $handle => $section) {
-            $entries = Entry::find()->section($handle)->site('*')->all();
-            foreach ($entries as $entry) {
+            foreach (Entry::find()->section($handle)->site('*')->all() as $entry) {
                 $content = $entry->getTTSContent();
                 if(!empty($content)){
                     $entries[] = $entry;
