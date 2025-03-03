@@ -9,10 +9,14 @@ use craft\elements\Entry;
 use craft\events\DefineBehaviorsEvent;
 use craft\events\DefineHtmlEvent;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterElementActionsEvent;
+use craft\events\RegisterElementTableAttributesEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\services\Utilities;
 use craft\web\View;
 use furbo\crafttexttospeech\behaviors\TextToSpeechBehavior;
+use furbo\crafttexttospeech\elements\actions\DeleteAudio;
+use furbo\crafttexttospeech\elements\actions\GenerateAudio;
 use furbo\crafttexttospeech\models\Settings;
 use furbo\crafttexttospeech\services\TextToSpeechService;
 use furbo\crafttexttospeech\utilities\TextToSpeechUtility;
@@ -72,6 +76,35 @@ class TextToSpeech extends Plugin
     private function attachEventHandlers(): void
     {
 
+        Event::on(
+            Entry::class,
+            Entry::EVENT_REGISTER_ACTIONS,
+            function (RegisterElementActionsEvent $event) {
+                $event->actions[] = GenerateAudio::class;
+                $event->actions[] = DeleteAudio::class;
+            }
+        );
+
+        // Register the new column
+        Event::on(
+            Entry::class,
+            Entry::EVENT_REGISTER_TABLE_ATTRIBUTES,
+            function (RegisterElementTableAttributesEvent $event) {
+                $event->tableAttributes['ttsAudio'] = ['label' => 'TTS Audio'];
+            }
+        );
+
+        // Define the logic to return "Yes" or "No"
+        Event::on(
+            Entry::class,
+            Entry::EVENT_DEFINE_ATTRIBUTE_HTML,
+            function (Event $event) {
+                if ($event->attribute === 'ttsAudio') {
+                    $entry = $event->sender;
+                    $event->html = $entry->getTTSAudio() ? '<span class="status green"></span>' : '<span class="status red"></span>';
+                }
+            }
+        );
 
         Event::on(
             Entry::class,

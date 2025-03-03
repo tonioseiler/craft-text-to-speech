@@ -1,17 +1,26 @@
 {% import '_includes/forms.twig' as forms %}
 
-<div class="meta" style="padding-top: 20px; padding-bottom: 20px;">
-    <audio controls>
-        <source src="{{ entry.getTTSAudio }}" type="audio/mpeg">
-        Your browser does not support the audio tag.
-    </audio>
+<div class="field">
+    <div class="heading"><label id="textarea44660296-label" class="h6" for="textarea44660296">Google Text‐to‐Speech AI</label></div>
+    <div class="meta" style="padding-top: 20px; padding-bottom: 20px;">
+        {% if entry.getTTSAudio %}
+        <audio controls>
+            <source src="{{ entry.getTTSAudio }}" type="audio/mpeg">
+            Your browser does not support the audio tag.
+        </audio>
+        {% endif %}
 
-    <div class="buttons">
-        <button id="preview-modal" class="btn" type="button">{{ 'Preview Script'|t('text-to-speech') }}</button>
-        <button id="generate-tts" type="button" class="btn" data-action="text-to-speech/text-to-speech/generate-tts" data-id="{{ entry.id }}">
-            {{ 'Generate TTS Audio'|t('text-to-speech') }}</button>
+        <div class="buttons">
+            <button id="preview-modal" class="btn" type="button">{{ 'Preview'|t('text-to-speech') }}</button>
+            <button id="generate-tts" type="button" class="btn btn-submit" data-action="text-to-speech/text-to-speech/generate-tts" data-id="{{ entry.id }}">
+                {{ 'Generate'|t('text-to-speech') }}</button>
+            {% if entry.getTTSAudio %}
+            <button id="delete-tts" type="button" class="btn btn-submit remove" data-action="text-to-speech/text-to-speech/delete-tts" data-id="{{ entry.id }}">{{ 'Delete'|t('app') }}</button>
+            {% endif %}
+        </div>
+        <p>The number of characters that will be generated is <strong>{{ entry.getTTSContent|length }}</strong>.</p>
+
     </div>
-
 </div>
 
 <!-- Modal Structure -->
@@ -35,29 +44,32 @@
             $modal.show();
         });
 
-        document.getElementById('generate-tts').addEventListener('click', function() {
-            this.setAttribute('disabled', 'disabled');
-            //add opacity
-            this.style.opacity = 0.5;
-            const action = this.getAttribute('data-action');
-            const entryId = this.getAttribute('data-id');
-            const currentUrl = window.location.href;
+        document.querySelectorAll('.btn-submit').forEach(function (button){
+
+            button.addEventListener('click', function() {
+                this.setAttribute('disabled', 'disabled');
+                //add opacity
+                this.style.opacity = 0.5;
+                const action = this.getAttribute('data-action');
+                const entryId = this.getAttribute('data-id');
+                const currentUrl = window.location.href;
 
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', currentUrl, true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        // reload
-                        window.location.reload();
-                    } else {
-                        window.location.reload();
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', currentUrl, true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            // reload
+                            window.location.reload();
+                        } else {
+                            window.location.reload();
+                        }
                     }
-                }
-            };
-            xhr.send(`entryId=${entryId}&action=${action}&${Craft.csrfTokenName}=${Craft.csrfTokenValue}&siteId=${Craft.siteId}`);
+                };
+                xhr.send(`entryId=${entryId}&action=${action}&${Craft.csrfTokenName}=${Craft.csrfTokenValue}&siteId=${Craft.siteId}`);
+            });
         });
     });
 </script>

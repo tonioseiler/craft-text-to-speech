@@ -44,4 +44,27 @@ class TextToSpeechBehavior extends Behavior
 
         return $content;
     }
+
+    /**
+     * @throws \Throwable
+     */
+    public function deleteTTSAudio()
+    {
+        $section = $this->owner->section;
+        $entry = $this->owner;
+
+        $siteHandle = $entry->site->handle;
+        $filename = TextToSpeech::getInstance()->textToSpeechService->getFileName($entry) . ".mp3";
+
+        // Find asset by filename
+        $asset = Asset::find()
+            ->filename($filename)
+            ->one();
+
+        if(!is_null($asset)){
+            return \Craft::$app->getElements()->deleteElementById($asset->id);
+        }
+
+        return false;
+    }
 }

@@ -2,6 +2,8 @@
 <p>{{ 'Use this tool to generate audio files for all entries with active sections using Google Text-to-Speech AI. Simply
     click the button below to start the process.'|t('text-to-speech') }}</p>
 
+<p><strong>{{ craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getEntries()|length|number_format }}</strong> audio files will be generated, and the total number of characters is <strong>{{ craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getTotalCharacters()|number_format }}</strong>.</p>
+
 <form method="post">
     {{ actionInput('text-to-speech/text-to-speech/generate-all-tts') }}
     {{ csrfInput() }}
@@ -9,3 +11,4 @@
         <button type="submit" class="btn submit secondary">{{ 'Generate TTS Audios'|t('text-to-speech') }}</button>
     </div>
 </form>
+

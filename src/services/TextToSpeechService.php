@@ -17,6 +17,7 @@ use furbo\crafttexttospeech\models\Settings;
 use furbo\crafttexttospeech\TextToSpeech;
 use Google\ApiCore\ApiException;
 use Google\ApiCore\ValidationException;
+use Google\Client;
 use Google\Cloud\TextToSpeech\V1\AudioConfig;
 use Google\Cloud\TextToSpeech\V1\AudioEncoding;
 use Google\Cloud\TextToSpeech\V1\Client\TextToSpeechClient;
@@ -27,6 +28,7 @@ use Google\Cloud\TextToSpeech\V1\SynthesisInput;
 use Google\Cloud\TextToSpeech\V1\SynthesizeLongAudioRequest;
 use Google\Cloud\TextToSpeech\V1\SynthesizeSpeechRequest;
 use Google\Cloud\TextToSpeech\V1\VoiceSelectionParams;
+use Google\Service\ServiceUsage;
 use yii\base\Component;
 use yii\base\Exception;
 
@@ -57,6 +59,25 @@ class TextToSpeechService extends Component
             }
         }
 
+    }
+
+    public function getQuota() {
+        $client = new Client();
+        $client->setAuthConfig($this->credentials);
+        $client->addScope('https://www.googleapis.com/auth/cloud-platform');
+
+        $serviceUsageService = new ServiceUsage($client);
+        $projectName = 'projects/' . $this->credentials['project_id'];
+        $serviceName = 'texttospeech.googleapis.com';
+
+        try {
+            $service = $serviceUsageService->services->get($projectName . '/services/' . $serviceName);
+            $quota = $service->quota;
+            //return $service;
+            return $quota;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     protected function initSynthesizeClient(): void
@@ -377,5 +398,31 @@ class TextToSpeechService extends Component
         return $fixedContents;
 
     }
+
+    public function getEntries(): array{
+        $entries = [];
+        $settings = TextToSpeech::$plugin->getSettings();
+
+        foreach ($settings->getSectionsEnabled() as $handle => $section) {
+            $entries = Entry::find()->section($handle)->site('*')->all();
+            foreach ($entries as $entry) {
+                $content = $entry->getTTSContent();
+                if(!empty($content)){
+                    $entries[] = $entry;
+                }
+            }
+        }
+        return $entries;
+    }
+
+    public function getTotalCharacters(): int
+    {
+        $total = 0;
+        foreach ($this->getEntries() as $entry){
+            $total = $total + strlen($entry->getTTSContent());
+        }
+        return $total;
+    }
+
 
 }

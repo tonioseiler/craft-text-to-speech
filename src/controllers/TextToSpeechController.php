@@ -26,16 +26,9 @@ class TextToSpeechController extends Controller
     {
         $this->requirePostRequest();
 
-        $settings = TextToSpeech::$plugin->getSettings();
-
-        foreach ($settings->getSectionsEnabled() as $handle => $section) {
-            $entries = Entry::find()->section($handle)->site('*')->all();
-            foreach ($entries as $entry) {
-                $content = $entry->getTTSContent();
-                if(!empty($content)){
-                    TextToSpeech::getInstance()->textToSpeechService->executeTTSJob($entry, $content);
-                }
-            }
+        foreach (TextToSpeech::getInstance()->textToSpeechService->getEntries() as $entry) {
+            $content = $entry->getTTSContent();
+            TextToSpeech::getInstance()->textToSpeechService->executeTTSJob($entry, $content);
         }
 
     }
@@ -54,6 +47,18 @@ class TextToSpeechController extends Controller
                     TextToSpeech::getInstance()->textToSpeechService->executeTTSJob($entry, $content);
                 }
             }
+        }
+        exit();
+    }
+
+    public function actionDeleteTts()
+    {
+        $this->requirePostRequest();
+        $params = Craft::$app->getRequest()->getBodyParams();
+
+        $entry = Entry::find()->id($params['entryId'])->siteId($params['siteId'])->one();
+        if($entry){
+            $entry->deleteTTSAudio();
         }
         exit();
     }

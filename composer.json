@@ -3,7 +3,7 @@
   "description": "The Text-to-Speech Plugin is a powerful tool designed to bring enhanced accessibility and user engagement to your Craft CMS website. With this plugin, you can effortlessly convert written content into natural-sounding speech, creating an inclusive experience for users who prefer or require audio content.",
   "type": "craft-plugin",
   "license": "mit",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "support": {
     "email": "support@furbo.ch",
     "homepage": "https://www.furbo.ch",
@@ -15,7 +15,8 @@
   "require": {
     "php": ">=8.2",
     "craftcms/cms": "^5.4.0",
-    "google/cloud-text-to-speech": "^1.12.1"
+    "google/cloud-text-to-speech": "^1.12.1",
+    "google/apiclient": "^2.10.0"
   },
   "require-dev": {
     "craftcms/ecs": "dev-main",
