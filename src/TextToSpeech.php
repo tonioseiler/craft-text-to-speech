@@ -18,9 +18,13 @@ use furbo\crafttexttospeech\behaviors\TextToSpeechBehavior;
 use furbo\crafttexttospeech\elements\actions\DeleteAudio;
 use furbo\crafttexttospeech\elements\actions\GenerateAudio;
 use furbo\crafttexttospeech\models\Settings;
+use furbo\crafttexttospeech\records\ProcessLogRecord;
 use furbo\crafttexttospeech\services\TextToSpeechService;
 use furbo\crafttexttospeech\utilities\TextToSpeechUtility;
 use yii\base\Event;
+use craft\queue\Queue;
+use yii\queue\PushEvent;
+use yii\queue\ExecEvent;
 
 /**
  * Text‐to‐Speech plugin
@@ -142,5 +146,71 @@ class TextToSpeech extends Plugin
         Event::on(Utilities::class, Utilities::EVENT_REGISTER_UTILITIES, function (RegisterComponentTypesEvent $event) {
             $event->types[] = TextToSpeechUtility::class;
         });
+
+
+        Event::on(
+            Queue::class,
+            Queue::EVENT_AFTER_PUSH,
+            function (PushEvent $event) {
+                $job = $event->job;
+                if ($job instanceof jobs\GenerateTTSJob) {
+                    $entry = $job->entry;
+                    $processLog = new ProcessLogRecord();
+                    $processLog->entryId = $entry->id;
+                    $processLog->siteId = $entry->siteId;
+                    $processLog->status = ProcessLogRecord::STATUS_PENDING;
+                    $processLog->job = $job->job;
+                    $processLog->characters = strlen($job->content);
+                    $processLog->save();
+                }
+            }
+        );
+
+        Event::on(
+            Queue::class,
+            Queue::EVENT_BEFORE_EXEC,
+            function (ExecEvent $event) {
+                $job = $event->job;
+                if ($job instanceof jobs\GenerateTTSJob) {
+                    $processLog = ProcessLogRecord::find()->where(['job' => $job->job])->one();
+                    if($processLog) {
+                        $processLog->status = ProcessLogRecord::STATUS_PROCESSING;
+                        $processLog->save();
+                    }
+                }
+            }
+        );
+
+        Event::on(
+            Queue::class,
+            Queue::EVENT_AFTER_EXEC_AND_RELEASE,
+            function (ExecEvent $event) {
+                $job = $event->job;
+                if ($job instanceof jobs\GenerateTTSJob) {
+                    $processLog = ProcessLogRecord::find()->where(['job' => $job->job])->one();
+                    if($processLog) {
+                        $processLog->status = ProcessLogRecord::STATUS_COMPLETED;
+                        $processLog->save();
+                    }
+                }
+            }
+        );
+
+        Event::on(
+            Queue::class,
+            Queue::EVENT_AFTER_ERROR,
+            function (ExecEvent $event) {
+                $job = $event->job;
+                if ($job instanceof jobs\GenerateTTSJob) {
+                    $processLog = ProcessLogRecord::find()->where(['job' => $job->job])->one();
+                    if($processLog) {
+                        $processLog->status = ProcessLogRecord::STATUS_FAILED;
+                        //$processLog->message = $event->result;
+                        $processLog->save();
+                    }
+                }
+            }
+        );
+
     }
 }

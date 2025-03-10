@@ -19,6 +19,7 @@
             {% endif %}
         </div>
         <p>The number of characters that will be generated is <strong>{{ entry.getTTSContent|length }}</strong>.</p>
+        <p>The total number of characters used this month is approximately <strong>{{ craft.app.plugins.getPlugin('text-to-speech').textToSpeechService.getTotalCharactersForCurrentMonth()|number_format }}</strong> out of <strong>1,000,000</strong> (limit for the free version).</p>
 
     </div>
 </div>

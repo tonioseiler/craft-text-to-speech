@@ -14,6 +14,7 @@ use craft\models\VolumeFolder;
 use craft\web\View;
 use furbo\crafttexttospeech\jobs\GenerateTTSJob;
 use furbo\crafttexttospeech\models\Settings;
+use furbo\crafttexttospeech\records\ProcessLogRecord;
 use furbo\crafttexttospeech\TextToSpeech;
 use Google\ApiCore\ApiException;
 use Google\ApiCore\ValidationException;
@@ -214,12 +215,22 @@ class TextToSpeechService extends Component
 
     public function executeTTSJob(Entry $entry, string $content)
     {
+        $uuid = uniqid();
         $job = new GenerateTTSJob([
+            'job' => $uuid,
+            'entry' => $entry,
             'content' => $content,
             'siteHandle' => $entry->site->handle,
             'filename' => $this->getFileName($entry),
         ]);
-        Queue::push($job);
+        $job = Queue::push($job);
+
+        /*$processLog = new ProcessLogRecord();
+        $processLog->entryId = $entry->id;
+        $processLog->siteId = $entry->siteId;
+        $processLog->status = ProcessLogRecord::STATUS_PENDING;
+        $processLog->job = $job;
+        $processLog->save();*/
     }
 
     /**
@@ -421,6 +432,15 @@ class TextToSpeechService extends Component
             $total = $total + strlen($entry->getTTSContent());
         }
         return $total;
+    }
+
+    public function getTotalCharactersForCurrentMonth(): int
+    {
+        $processLogs = ProcessLogRecord::find()
+            ->where(['MONTH(dateCreated)' => date('m'), 'YEAR(dateCreated)' => date('Y')])
+            ->where(['status' => ProcessLogRecord::STATUS_COMPLETED])
+            ->sum('characters');
+        return $processLogs;
     }
 
 
