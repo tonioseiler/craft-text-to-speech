@@ -16,7 +16,7 @@ class GenerateTTSJob extends BaseJob
 {
 
     public string $job;
-    public Entry $entry;
+    public int $entryId;
     public string $content;
     public string $siteHandle;
     public string $filename;

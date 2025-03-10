@@ -218,19 +218,12 @@ class TextToSpeechService extends Component
         $uuid = uniqid();
         $job = new GenerateTTSJob([
             'job' => $uuid,
-            'entry' => $entry,
+            'entryId' => $entry->id,
             'content' => $content,
             'siteHandle' => $entry->site->handle,
             'filename' => $this->getFileName($entry),
         ]);
-        $job = Queue::push($job);
-
-        /*$processLog = new ProcessLogRecord();
-        $processLog->entryId = $entry->id;
-        $processLog->siteId = $entry->siteId;
-        $processLog->status = ProcessLogRecord::STATUS_PENDING;
-        $processLog->job = $job;
-        $processLog->save();*/
+        Queue::push($job);
     }
 
     /**

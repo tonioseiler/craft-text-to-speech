@@ -154,14 +154,16 @@ class TextToSpeech extends Plugin
             function (PushEvent $event) {
                 $job = $event->job;
                 if ($job instanceof jobs\GenerateTTSJob) {
-                    $entry = $job->entry;
-                    $processLog = new ProcessLogRecord();
-                    $processLog->entryId = $entry->id;
-                    $processLog->siteId = $entry->siteId;
-                    $processLog->status = ProcessLogRecord::STATUS_PENDING;
-                    $processLog->job = $job->job;
-                    $processLog->characters = strlen($job->content);
-                    $processLog->save();
+                    $entry = Entry::find()->id($job->entryId)->one();
+                    if($entry) {
+                        $processLog = new ProcessLogRecord();
+                        $processLog->entryId = $entry->id;
+                        $processLog->siteId = $entry->siteId;
+                        $processLog->status = ProcessLogRecord::STATUS_PENDING;
+                        $processLog->job = $job->job;
+                        $processLog->characters = strlen($job->content);
+                        $processLog->save();
+                    }
                 }
             }
         );
