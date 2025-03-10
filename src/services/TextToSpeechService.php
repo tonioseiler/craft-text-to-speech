@@ -440,7 +440,7 @@ class TextToSpeechService extends Component
             ->where(['MONTH(dateCreated)' => date('m'), 'YEAR(dateCreated)' => date('Y')])
             ->where(['status' => ProcessLogRecord::STATUS_COMPLETED])
             ->sum('characters');
-        return $processLogs;
+        return $processLogs ?? 0;
     }
 
 
