@@ -135,7 +135,8 @@ class TextToSpeech extends Plugin
                     $section = $event->sender->getSection();
                     $sectionSettings = TextToSpeech::getInstance()->getSettings()->getSectionByHandle($section->handle);
                     if($sectionSettings['enabled']) {
-                        $event->behaviors[$section->handle] = TextToSpeechBehavior::class;
+                        $key = $section->handle . 'TTS';
+                        $event->behaviors[$key] = TextToSpeechBehavior::class;
                     }
                 }catch (\Exception $e){
                 }
